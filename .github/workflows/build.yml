@@ -9,34 +9,25 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+
+      - name: Instalar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.10
 
       - name: Instalar dependencias
         run: |
           sudo apt update
-          sudo apt install -y zip unzip openjdk-17-jdk python3-pip git \
-          libffi-dev libssl-dev libjpeg-dev zlib1g-dev \
-          autoconf libtool pkg-config
-
-          python3 -m pip install --upgrade pip
+          sudo apt install -y zip unzip openjdk-17-jdk
           pip install buildozer cython
-
-      - name: Inicializar buildozer
-        run: |
-          buildozer init || true
-
-      - name: Configurar buildozer
-        run: |
-          sed -i 's/^requirements = .*/requirements = python3,kivy/' buildozer.spec
-          sed -i 's/^#android.arch = .*/android.arch = arm64-v8a/' buildozer.spec
 
       - name: Compilar APK
         run: |
-          buildozer -v android debug
+          buildozer android debug
 
       - name: Subir APK
         uses: actions/upload-artifact@v4
         with:
-          name: APK
+          name: apk
           path: bin/*.apk
