@@ -10,16 +10,18 @@ jobs:
 
     container:
       image: kivy/buildozer:latest
-      options: --user 1000
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Dar permisos
-        run: chmod -R 777 .
+      - name: Crear usuario
+        run: |
+          useradd -m user
+          chown -R user:user .
 
       - name: Build APK
-        run: buildozer android debug
+        run: |
+          su user -c "buildozer android debug"
 
       - name: Subir APK
         uses: actions/upload-artifact@v4
