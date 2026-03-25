@@ -9,7 +9,8 @@ jobs:
     runs-on: ubuntu-22.04
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
       - name: Instalar Python
         uses: actions/setup-python@v5
@@ -19,12 +20,29 @@ jobs:
       - name: Instalar dependencias
         run: |
           sudo apt update
-          sudo apt install -y zip unzip openjdk-17-jdk
+          sudo apt install -y zip unzip openjdk-17-jdk wget tar
+          pip install --upgrade pip
           pip install buildozer cython
 
-      - name: Instalar Android SDK
+      - name: Instalar Android SDK manual
         run: |
-          yes | sdkmanager --licenses || true
+          mkdir -p $HOME/android-sdk
+          cd $HOME/android-sdk
+          wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip
+          unzip commandlinetools-linux-9477386_latest.zip
+          mkdir cmdline-tools
+          mv cmdline-tools cmdline-tools/latest || true
+
+          export ANDROID_HOME=$HOME/android-sdk
+          export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$PATH
+
+          yes | sdkmanager --licenses
+          sdkmanager "platform-tools" "platforms;android-31" "build-tools;31.0.0"
+
+      - name: Configurar variables
+        run: |
+          echo "ANDROID_HOME=$HOME/android-sdk" >> $GITHUB_ENV
+          echo "PATH=$HOME/android-sdk/cmdline-tools/latest/bin:$PATH" >> $GITHUB_ENV
 
       - name: Compilar APK
         run: |
