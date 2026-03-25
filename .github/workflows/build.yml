@@ -2,34 +2,41 @@ name: Build APK
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout
-      uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-    - name: Instalar dependencias
-      run: |
-        sudo apt update
-        sudo apt install -y zip unzip openjdk-17-jdk python3-pip git \
-        libffi-dev libssl-dev libjpeg-dev zlib1g-dev \
-        autoconf libtool pkg-config
+      - name: Instalar dependencias
+        run: |
+          sudo apt update
+          sudo apt install -y zip unzip openjdk-17-jdk python3-pip git \
+          libffi-dev libssl-dev libjpeg-dev zlib1g-dev \
+          autoconf libtool pkg-config
 
-        pip install --upgrade pip
-        pip install buildozer cython
+          python3 -m pip install --upgrade pip
+          pip install buildozer cython
 
-    - name: Build APK
-      run: |
-        buildozer init || true
-        sed -i 's/requirements = .*/requirements = python3,kivy/' buildozer.spec
-        buildozer android debug
+      - name: Inicializar buildozer
+        run: |
+          buildozer init || true
 
-    - name: Subir APK
-      uses: actions/upload-artifact@v4
-      with:
-        name: APK
-        path: bin/*.apk
+      - name: Configurar buildozer
+        run: |
+          sed -i 's/^requirements = .*/requirements = python3,kivy/' buildozer.spec
+          sed -i 's/^#android.arch = .*/android.arch = arm64-v8a/' buildozer.spec
+
+      - name: Compilar APK
+        run: |
+          buildozer -v android debug
+
+      - name: Subir APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: APK
+          path: bin/*.apk
