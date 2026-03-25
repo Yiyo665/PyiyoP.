@@ -13,8 +13,7 @@ jobs:
       options: --user 1000
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Dar permisos
         run: chmod -R 777 .
