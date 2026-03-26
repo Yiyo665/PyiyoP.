@@ -14,13 +14,12 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 2️⃣ Instalar dependencias básicas del sistema y Python
+      # 2️⃣ Instalar dependencias del sistema y paquetes Python
       - name: Install system dependencies and Python packages
         run: |
           sudo apt-get update
           sudo apt-get install -y python3-pip git zip unzip openjdk-17-jdk wget
           python3 -m pip install --upgrade pip
-          # Instalar Buildozer, Cython y python-for-android
           pip install buildozer cython python-for-android
 
       # 3️⃣ Descargar e instalar Android SDK Command Line Tools
@@ -41,16 +40,20 @@ jobs:
           sdkmanager "platforms;android-31"
           sdkmanager "build-tools;31.0.0"
 
-      # 4️⃣ Crear symlinks para que Buildozer encuentre build-tools, platforms y cmdline-tools
+      # 4️⃣ Crear symlinks para que Buildozer encuentre build-tools, platforms y sdkmanager
       - name: Create SDK symlinks for Buildozer
         run: |
           mkdir -p $HOME/.buildozer/android/platform/android-sdk
+          # symlinks para build-tools, platforms y platform-tools
           ln -s $HOME/android-sdk/build-tools $HOME/.buildozer/android/platform/android-sdk/build-tools
           ln -s $HOME/android-sdk/platforms $HOME/.buildozer/android/platform/android-sdk/platforms
           ln -s $HOME/android-sdk/platform-tools $HOME/.buildozer/android/platform/android-sdk/platform-tools
           ln -s $HOME/android-sdk/cmdline-tools $HOME/.buildozer/android/platform/android-sdk/cmdline-tools
+          # symlink especial para sdkmanager (Buildozer lo busca en tools/bin)
+          mkdir -p $HOME/.buildozer/android/platform/android-sdk/tools
+          ln -s $HOME/android-sdk/cmdline-tools/latest $HOME/.buildozer/android/platform/android-sdk/tools
 
-      # 5️⃣ Verificar que AIDL está disponible
+      # 5️⃣ Verificar que AIDL existe
       - name: Verify AIDL
         run: |
           ls $HOME/.buildozer/android/platform/android-sdk/build-tools/31.0.0/aidl
@@ -86,7 +89,7 @@ jobs:
           buildozer android clean
           buildozer android debug
 
-      # 🔟 Subir APK generado como artifact de GitHub Actions
+      # 🔟 Subir APK generado como artifact
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
