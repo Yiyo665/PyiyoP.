@@ -20,43 +20,40 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y python3-pip git zip unzip openjdk-17-jdk wget
           python3 -m pip install --upgrade pip
-          # Instalar Buildozer, Cython y python-for-android desde pip
           pip install buildozer cython python-for-android
 
-      # 3️⃣ Instalar Android SDK en la ruta que Buildozer espera
+      # 3️⃣ Instalar Android SDK en la ubicación que Buildozer espera
       - name: Install Android SDK
         run: |
-          mkdir -p $HOME/.buildozer/android/platform/android-sdk/tools
-          cd $HOME/.buildozer/android/platform/android-sdk/tools
-          wget https://dl.google.com/android/repository/commandlinetools-linux-8092744_latest.zip -O commandlinetools.zip
-          unzip -o commandlinetools.zip
+          export ANDROID_SDK_ROOT=$HOME/.buildozer/android/platform/android-sdk
+
+          mkdir -p $ANDROID_SDK_ROOT/cmdline-tools
+          cd $ANDROID_SDK_ROOT/cmdline-tools
+          wget https://dl.google.com/android/repository/commandlinetools-linux-8092744_latest.zip -O cmdline-tools.zip
+          unzip -o cmdline-tools.zip
           mv cmdline-tools latest
 
-          export ANDROIDSDK=$HOME/.buildozer/android/platform/android-sdk
-          export PATH=$ANDROIDSDK/tools/latest/bin:$ANDROIDSDK/platform-tools:$ANDROIDSDK/build-tools/31.0.0:$PATH
-
-          # Aceptar licencias y descargar herramientas necesarias
+          # Instalar herramientas necesarias
+          export PATH=$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$ANDROID_SDK_ROOT/platform-tools:$ANDROID_SDK_ROOT/build-tools/31.0.0:$PATH
           yes | sdkmanager --licenses
-          sdkmanager "platform-tools"
-          sdkmanager "platforms;android-31"
-          sdkmanager "build-tools;31.0.0"
+          sdkmanager "platform-tools" "platforms;android-31" "build-tools;31.0.0"
 
       # 4️⃣ Inicializar Buildozer si no existe buildozer.spec
       - name: Initialize Buildozer
         run: |
           buildozer init || true
 
-      # 5️⃣ Configurar buildozer.spec para requerimientos mínimos
+      # 5️⃣ Configurar buildozer.spec
       - name: Configure buildozer.spec
         run: |
           sed -i 's/^requirements = .*/requirements = python3,kivy/' buildozer.spec
 
-      # 6️⃣ Compilar la APK de Android
+      # 6️⃣ Compilar la APK
       - name: Build APK
         run: |
           export BUILDOZER_ALLOW_ROOT=1
-          export ANDROIDSDK=$HOME/.buildozer/android/platform/android-sdk
-          export PATH=$ANDROIDSDK/tools/latest/bin:$ANDROIDSDK/platform-tools:$ANDROIDSDK/build-tools/31.0.0:$PATH
+          export ANDROID_SDK_ROOT=$HOME/.buildozer/android/platform/android-sdk
+          export PATH=$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$ANDROID_SDK_ROOT/platform-tools:$ANDROID_SDK_ROOT/build-tools/31.0.0:$PATH
 
           # Limpiar compilaciones previas y compilar APK
           buildozer android clean
