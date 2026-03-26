@@ -17,7 +17,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y python3-pip git zip unzip openjdk-17-jdk wget
           python3 -m pip install --upgrade pip
-          pip install buildozer cython
+          pip install buildozer cython python-for-android
 
       - name: Instalar Android SDK
         run: |
@@ -46,6 +46,15 @@ jobs:
       - name: Configurar buildozer
         run: |
           sed -i 's/^requirements = .*/requirements = python3,kivy/' buildozer.spec
+
+      # 🔹 AÑADIDO: preparar python-for-android
+      - name: Preparar python-for-android
+        run: |
+          mkdir -p $GITHUB_WORKSPACE/.buildozer/android/platform
+          cd $GITHUB_WORKSPACE/.buildozer/android/platform
+          if [ ! -d "python-for-android" ]; then
+            git clone https://github.com/kivy/python-for-android.git
+          fi
 
       - name: Compilar APK
         run: |
