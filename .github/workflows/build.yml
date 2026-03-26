@@ -19,24 +19,26 @@ jobs:
           python3 -m pip install --upgrade pip
           pip install buildozer cython
 
-      - name: Instalar Android SDK (FIX AIDL)
+      - name: Instalar Android SDK
         run: |
           mkdir -p $HOME/android-sdk/cmdline-tools
           cd $HOME
           wget https://dl.google.com/android/repository/commandlinetools-linux-8092744_latest.zip -O tools.zip
-          unzip tools.zip
+          unzip -o tools.zip
           mv cmdline-tools $HOME/android-sdk/cmdline-tools/latest
+
           export ANDROID_SDK_ROOT=$HOME/android-sdk
           export PATH=$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$PATH
+
           yes | sdkmanager --licenses
           sdkmanager "platform-tools"
           sdkmanager "platforms;android-31"
           sdkmanager "build-tools;31.0.0"
-          
+
       - name: Verificar AIDL
         run: |
           ls $HOME/android-sdk/build-tools/31.0.0
-               
+
       - name: Inicializar buildozer
         run: |
           buildozer init || true
@@ -52,11 +54,9 @@ jobs:
           export ANDROID_SDK_ROOT=$HOME/android-sdk
           export PATH=$ANDROID_HOME/platform-tools:$ANDROID_HOME/build-tools/31.0.0:$ANDROID_HOME/cmdline-tools/latest/bin:$PATH
 
-          ls $ANDROID_HOME/build-tools/31.0.0 || true
-
           buildozer android clean
           buildozer android debug
-          
+
       - name: Subir APK
         uses: actions/upload-artifact@v4
         with:
