@@ -20,7 +20,7 @@ jobs:
       - name: Forzar build (permitir root)
         run: |
           export BUILDOZER_ALLOW_ROOT=1
-          buildozer -v android debug
+          buildozer -v android debug --confirm android debug
 
       - name: Subir APK
         uses: actions/upload-artifact@v4
