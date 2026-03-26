@@ -14,7 +14,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 2️⃣ Instalar dependencias del sistema y paquetes Python
+      # 2️⃣ Instalar dependencias del sistema y Python
       - name: Install system dependencies and Python packages
         run: |
           sudo apt-get update
@@ -22,18 +22,19 @@ jobs:
           python3 -m pip install --upgrade pip
           pip install buildozer cython python-for-android
 
-      # 3️⃣ Instalar Android SDK en la ubicación que Buildozer espera
+      # 3️⃣ Instalar Android SDK en la ruta que Buildozer espera
       - name: Install Android SDK
         run: |
           export ANDROID_SDK_ROOT=$HOME/.buildozer/android/platform/android-sdk
 
+          # Crear carpetas y descargar Command Line Tools
           mkdir -p $ANDROID_SDK_ROOT/cmdline-tools
           cd $ANDROID_SDK_ROOT/cmdline-tools
           wget https://dl.google.com/android/repository/commandlinetools-linux-8092744_latest.zip -O cmdline-tools.zip
           unzip -o cmdline-tools.zip
           mv cmdline-tools latest
 
-          # Instalar herramientas necesarias
+          # Instalar herramientas necesarias y aceptar licencias
           export PATH=$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$ANDROID_SDK_ROOT/platform-tools:$ANDROID_SDK_ROOT/build-tools/31.0.0:$PATH
           yes | sdkmanager --licenses
           sdkmanager "platform-tools" "platforms;android-31" "build-tools;31.0.0"
@@ -48,18 +49,24 @@ jobs:
         run: |
           sed -i 's/^requirements = .*/requirements = python3,kivy/' buildozer.spec
 
-      # 6️⃣ Compilar la APK
+      # 6️⃣ Asegurar que Buildozer encuentra python-for-android
+      - name: Ensure python-for-android path
+        run: |
+          export P4A=$(python3 -c "import os, pythonforandroid; print(os.path.dirname(pythonforandroid.__file__))")
+          echo "Python-for-Android path: $P4A"
+
+      # 7️⃣ Compilar la APK
       - name: Build APK
         run: |
           export BUILDOZER_ALLOW_ROOT=1
           export ANDROID_SDK_ROOT=$HOME/.buildozer/android/platform/android-sdk
           export PATH=$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$ANDROID_SDK_ROOT/platform-tools:$ANDROID_SDK_ROOT/build-tools/31.0.0:$PATH
 
-          # Limpiar compilaciones previas y compilar APK
+          # Limpiar compilaciones previas y compilar
           buildozer android clean
           buildozer android debug
 
-      # 7️⃣ Subir APK generado como artifact
+      # 8️⃣ Subir APK generado como artifact
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
