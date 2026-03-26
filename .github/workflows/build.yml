@@ -32,10 +32,10 @@ jobs:
           sdkmanager "platform-tools"
           sdkmanager "platforms;android-31"
           sdkmanager "build-tools;31.0.0"
-
-       - name: Verificar AIDL
-         run: |
-           ls $HOME/android-sdk/build-tools/31.0.0
+          
+      - name: Verificar AIDL
+        run: |
+          ls $HOME/android-sdk/build-tools/31.0.0
                
       - name: Inicializar buildozer
         run: |
