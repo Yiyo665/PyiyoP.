@@ -3,17 +3,18 @@ name: Build APK
 on:
   push:
     branches: ["main"]
+  pull_request:
 
 jobs:
   build:
     runs-on: ubuntu-22.04
 
     steps:
-      # 1️⃣ Clonar el repo
+      # 1️⃣ Clonar repo
       - name: Checkout
         uses: actions/checkout@v4
 
-      # 2️⃣ Instalar dependencias básicas
+      # 2️⃣ Instalar dependencias
       - name: Instalar dependencias
         run: |
           sudo apt-get update
@@ -38,8 +39,8 @@ jobs:
           sdkmanager "platforms;android-31"
           sdkmanager "build-tools;31.0.0"
 
-      # 4️⃣ Crear symlinks para que Buildozer encuentre aidl y build-tools
-      - name: Crear symlinks de SDK para Buildozer
+      # 4️⃣ Crear symlinks para que Buildozer encuentre build-tools y aidl
+      - name: Crear symlinks SDK
         run: |
           mkdir -p $HOME/.buildozer/android/platform/android-sdk
           ln -s $HOME/android-sdk/build-tools $HOME/.buildozer/android/platform/android-sdk/build-tools
@@ -47,17 +48,17 @@ jobs:
           ln -s $HOME/android-sdk/platform-tools $HOME/.buildozer/android/platform/android-sdk/platform-tools
           ln -s $HOME/android-sdk/cmdline-tools $HOME/.buildozer/android/platform/android-sdk/cmdline-tools
 
-      # 5️⃣ Verificar que aidl existe
+      # 5️⃣ Verificar aidl
       - name: Verificar AIDL
         run: |
           ls $HOME/.buildozer/android/platform/android-sdk/build-tools/31.0.0/aidl
 
-      # 6️⃣ Inicializar buildozer
+      # 6️⃣ Inicializar Buildozer
       - name: Inicializar buildozer
         run: |
           buildozer init || true
 
-      # 7️⃣ Configurar buildozer
+      # 7️⃣ Configurar buildozer.spec
       - name: Configurar buildozer
         run: |
           sed -i 's/^requirements = .*/requirements = python3,kivy/' buildozer.spec
@@ -82,7 +83,7 @@ jobs:
           buildozer android clean
           buildozer android debug
 
-      # 🔟 Subir APK generado
+      # 🔟 Subir APK
       - name: Subir APK
         uses: actions/upload-artifact@v4
         with:
