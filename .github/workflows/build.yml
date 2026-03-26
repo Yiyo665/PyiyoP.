@@ -33,6 +33,10 @@ jobs:
           sdkmanager "platforms;android-31"
           sdkmanager "build-tools;31.0.0"
 
+          - name: Verificar AIDL
+            run: |
+              ls $HOME/android-sdk/build-tools/31.0.0
+               
       - name: Inicializar buildozer
         run: |
           buildozer init || true
@@ -44,10 +48,15 @@ jobs:
       - name: Compilar APK
         run: |
           export BUILDOZER_ALLOW_ROOT=1
+          export ANDROID_HOME=$HOME/android-sdk
           export ANDROID_SDK_ROOT=$HOME/android-sdk
-          export PATH=$ANDROID_SDK_ROOT/platform-tools:$ANDROID_SDK_ROOT/build-tools/31.0.0:$PATH
-          buildozer android debug
+          export PATH=$ANDROID_HOME/platform-tools:$ANDROID_HOME/build-tools/31.0.0:$ANDROID_HOME/cmdline-tools/latest/bin:$PATH
 
+          ls $ANDROID_HOME/build-tools/31.0.0 || true
+
+          buildozer android clean
+          buildozer android debug
+          
       - name: Subir APK
         uses: actions/upload-artifact@v4
         with:
