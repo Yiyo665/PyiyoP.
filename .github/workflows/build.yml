@@ -27,14 +27,12 @@ jobs:
         run: |
           export ANDROID_SDK_ROOT=$HOME/.buildozer/android/platform/android-sdk
 
-          # Crear carpetas y descargar Command Line Tools
           mkdir -p $ANDROID_SDK_ROOT/cmdline-tools
           cd $ANDROID_SDK_ROOT/cmdline-tools
           wget https://dl.google.com/android/repository/commandlinetools-linux-8092744_latest.zip -O cmdline-tools.zip
           unzip -o cmdline-tools.zip
           mv cmdline-tools latest
 
-          # Instalar herramientas necesarias y aceptar licencias
           export PATH=$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$ANDROID_SDK_ROOT/platform-tools:$ANDROID_SDK_ROOT/build-tools/31.0.0:$PATH
           yes | sdkmanager --licenses
           sdkmanager "platform-tools" "platforms;android-31" "build-tools;31.0.0"
@@ -49,11 +47,13 @@ jobs:
         run: |
           sed -i 's/^requirements = .*/requirements = python3,kivy/' buildozer.spec
 
-      # 6️⃣ Asegurar que Buildozer encuentra python-for-android
-      - name: Ensure python-for-android path
+      # 6️⃣ Crear symlink de python-for-android para Buildozer
+      - name: Link python-for-android for Buildozer
         run: |
-          export P4A=$(python3 -c "import os, pythonforandroid; print(os.path.dirname(pythonforandroid.__file__))")
-          echo "Python-for-Android path: $P4A"
+          P4A_PATH=$(python3 -c "import os, pythonforandroid; print(os.path.dirname(pythonforandroid.__file__))")
+          mkdir -p $HOME/.buildozer/android/platform
+          ln -s $P4A_PATH $HOME/.buildozer/android/platform/python-for-android
+          echo "Python-for-Android linked at $HOME/.buildozer/android/platform/python-for-android"
 
       # 7️⃣ Compilar la APK
       - name: Build APK
@@ -62,7 +62,6 @@ jobs:
           export ANDROID_SDK_ROOT=$HOME/.buildozer/android/platform/android-sdk
           export PATH=$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$ANDROID_SDK_ROOT/platform-tools:$ANDROID_SDK_ROOT/build-tools/31.0.0:$PATH
 
-          # Limpiar compilaciones previas y compilar
           buildozer android clean
           buildozer android debug
 
