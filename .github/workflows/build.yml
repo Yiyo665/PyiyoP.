@@ -22,7 +22,7 @@ jobs:
           python3 -m pip install --upgrade pip
           pip install buildozer cython python-for-android
 
-      # 3️⃣ Instalar Android SDK
+      # 3️⃣ Instalar Android SDK y build-tools
       - name: Install Android SDK
         run: |
           export ANDROID_SDK_ROOT=$HOME/.buildozer/android/platform/android-sdk
@@ -47,11 +47,11 @@ jobs:
         run: |
           sed -i 's/^requirements = .*/requirements = python3,kivy/' buildozer.spec
 
-      # 6️⃣ Crear symlink de python-for-android que Buildozer espera
-      - name: Link python-for-android for Buildozer
+      # 6️⃣ Crear carpeta platform y symlink de python-for-android
+      - name: Create platform folder and symlink python-for-android
         run: |
-          P4A_PATH=$(python3 -c "import os, pythonforandroid; print(os.path.dirname(pythonforandroid.__file__))")
           mkdir -p $HOME/.buildozer/android/platform
+          P4A_PATH=$(python3 -c "import os, pythonforandroid; print(os.path.dirname(pythonforandroid.__file__))")
           ln -s $P4A_PATH $HOME/.buildozer/android/platform/python-for-android
           echo "Python-for-Android linked at $HOME/.buildozer/android/platform/python-for-android"
           ls -l $HOME/.buildozer/android/platform/
@@ -63,7 +63,6 @@ jobs:
           export ANDROID_SDK_ROOT=$HOME/.buildozer/android/platform/android-sdk
           export PATH=$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$ANDROID_SDK_ROOT/platform-tools:$ANDROID_SDK_ROOT/build-tools/31.0.0:$PATH
 
-          buildozer android clean
           buildozer android debug
 
       # 8️⃣ Subir APK generado como artifact
