@@ -20,19 +20,20 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y python3-pip git zip unzip openjdk-17-jdk wget
           python3 -m pip install --upgrade pip
+          # Instalar Buildozer, Cython y python-for-android desde pip
           pip install buildozer cython python-for-android
 
-      # 3️⃣ Descargar e instalar Android SDK Command Line Tools
+      # 3️⃣ Instalar Android SDK en la ruta que Buildozer espera
       - name: Install Android SDK
         run: |
-          mkdir -p $HOME/android-sdk/cmdline-tools
-          cd $HOME
-          wget https://dl.google.com/android/repository/commandlinetools-linux-8092744_latest.zip -O tools.zip
-          unzip -o tools.zip
-          mv cmdline-tools $HOME/android-sdk/cmdline-tools/latest
+          mkdir -p $HOME/.buildozer/android/platform/android-sdk/tools
+          cd $HOME/.buildozer/android/platform/android-sdk/tools
+          wget https://dl.google.com/android/repository/commandlinetools-linux-8092744_latest.zip -O commandlinetools.zip
+          unzip -o commandlinetools.zip
+          mv cmdline-tools latest
 
-          export ANDROID_SDK_ROOT=$HOME/android-sdk
-          export PATH=$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$PATH
+          export ANDROIDSDK=$HOME/.buildozer/android/platform/android-sdk
+          export PATH=$ANDROIDSDK/tools/latest/bin:$ANDROIDSDK/platform-tools:$ANDROIDSDK/build-tools/31.0.0:$PATH
 
           # Aceptar licencias y descargar herramientas necesarias
           yes | sdkmanager --licenses
@@ -40,56 +41,28 @@ jobs:
           sdkmanager "platforms;android-31"
           sdkmanager "build-tools;31.0.0"
 
-      # 4️⃣ Crear symlinks para que Buildozer encuentre build-tools, platforms y sdkmanager
-      - name: Create SDK symlinks for Buildozer
-        run: |
-          mkdir -p $HOME/.buildozer/android/platform/android-sdk
-          # symlinks para build-tools, platforms y platform-tools
-          ln -s $HOME/android-sdk/build-tools $HOME/.buildozer/android/platform/android-sdk/build-tools
-          ln -s $HOME/android-sdk/platforms $HOME/.buildozer/android/platform/android-sdk/platforms
-          ln -s $HOME/android-sdk/platform-tools $HOME/.buildozer/android/platform/android-sdk/platform-tools
-          ln -s $HOME/android-sdk/cmdline-tools $HOME/.buildozer/android/platform/android-sdk/cmdline-tools
-          # symlink especial para sdkmanager (Buildozer lo busca en tools/bin)
-          mkdir -p $HOME/.buildozer/android/platform/android-sdk/tools
-          ln -s $HOME/android-sdk/cmdline-tools/latest $HOME/.buildozer/android/platform/android-sdk/tools
-
-      # 5️⃣ Verificar que AIDL existe
-      - name: Verify AIDL
-        run: |
-          ls $HOME/.buildozer/android/platform/android-sdk/build-tools/31.0.0/aidl
-
-      # 6️⃣ Inicializar Buildozer si no existe buildozer.spec
+      # 4️⃣ Inicializar Buildozer si no existe buildozer.spec
       - name: Initialize Buildozer
         run: |
           buildozer init || true
 
-      # 7️⃣ Configurar buildozer.spec para requerimientos mínimos
+      # 5️⃣ Configurar buildozer.spec para requerimientos mínimos
       - name: Configure buildozer.spec
         run: |
           sed -i 's/^requirements = .*/requirements = python3,kivy/' buildozer.spec
 
-      # 8️⃣ Preparar python-for-android en la carpeta de Buildozer
-      - name: Prepare python-for-android
-        run: |
-          mkdir -p $GITHUB_WORKSPACE/.buildozer/android/platform
-          cd $GITHUB_WORKSPACE/.buildozer/android/platform
-          if [ ! -d "python-for-android" ]; then
-            git clone https://github.com/kivy/python-for-android.git
-          fi
-
-      # 9️⃣ Compilar la APK de Android
+      # 6️⃣ Compilar la APK de Android
       - name: Build APK
         run: |
           export BUILDOZER_ALLOW_ROOT=1
           export ANDROIDSDK=$HOME/.buildozer/android/platform/android-sdk
-          export ANDROID_NDK=$HOME/.buildozer/android/platform/android-ndk-r25b
-          export PATH=$ANDROIDSDK/platform-tools:$ANDROIDSDK/build-tools/31.0.0:$ANDROIDSDK/cmdline-tools/latest/bin:$PATH
+          export PATH=$ANDROIDSDK/tools/latest/bin:$ANDROIDSDK/platform-tools:$ANDROIDSDK/build-tools/31.0.0:$PATH
 
           # Limpiar compilaciones previas y compilar APK
           buildozer android clean
           buildozer android debug
 
-      # 🔟 Subir APK generado como artifact
+      # 7️⃣ Subir APK generado como artifact
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
