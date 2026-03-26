@@ -26,7 +26,6 @@ jobs:
       - name: Install Android SDK
         run: |
           export ANDROID_SDK_ROOT=$HOME/.buildozer/android/platform/android-sdk
-
           mkdir -p $ANDROID_SDK_ROOT/cmdline-tools
           cd $ANDROID_SDK_ROOT/cmdline-tools
           wget https://dl.google.com/android/repository/commandlinetools-linux-8092744_latest.zip -O cmdline-tools.zip
@@ -56,7 +55,15 @@ jobs:
           echo "Python-for-Android linked at $HOME/.buildozer/android/platform/python-for-android"
           ls -l $HOME/.buildozer/android/platform/
 
-      # 7️⃣ Compilar la APK
+      # 7️⃣ Exportar PATH correcto antes de compilar
+      - name: Set Android SDK PATH
+        run: |
+          export ANDROID_SDK_ROOT=$HOME/.buildozer/android/platform/android-sdk
+          export PATH=$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$ANDROID_SDK_ROOT/platform-tools:$ANDROID_SDK_ROOT/build-tools/31.0.0:$PATH
+          sdkmanager --version   # Verifica que sdkmanager funciona
+          aidl   # Verifica que aidl funciona
+
+      # 8️⃣ Compilar la APK
       - name: Build APK
         run: |
           export BUILDOZER_ALLOW_ROOT=1
@@ -65,7 +72,7 @@ jobs:
 
           buildozer android debug
 
-      # 8️⃣ Subir APK generado como artifact
+      # 9️⃣ Subir APK generado como artifact
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
